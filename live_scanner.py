@@ -1,11 +1,28 @@
 import os
 import openstack
+import socket
+from urllib.parse import urlparse
+
+def check_host_port(url, timeout=1.0):
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname
+        port = parsed.port or (443 if parsed.scheme == 'https' else 80)
+        socket.create_connection((host, port), timeout=timeout)
+        return True
+    except OSError:
+        return False
 
 def get_connection():
     """Establish OpenStack connection using environment variables."""
+    auth_url = os.environ.get("OS_AUTH_URL", "http://10.20.20.1:5000/v3")
+    if not check_host_port(auth_url):
+        print(f"Host for {auth_url} is unreachable. Skipping connection to prevent hang.")
+        return None
+
     try:
         conn = openstack.connect(
-            auth_url="http://10.20.20.1:5000/v3",
+            auth_url=auth_url,
             project_name=os.environ.get("OS_PROJECT_NAME", "admin"),
             username=os.environ.get("OS_USERNAME", "admin"),
             password=os.environ.get("OS_PASSWORD", "secret"),
