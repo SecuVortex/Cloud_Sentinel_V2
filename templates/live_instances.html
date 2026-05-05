@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Sentinel V2 | Live Status</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #c9d1d9;
+        }
+        .card-header {
+            background-color: #21262d;
+            border-bottom: 1px solid #30363d;
+            font-weight: 600;
+        }
+        .table {
+            color: #c9d1d9;
+        }
+        .table-striped>tbody>tr:nth-of-type(odd)>* {
+            color: #c9d1d9;
+            background-color: rgba(255,255,255,0.05);
+        }
+        .table-hover>tbody>tr:hover>* {
+            color: #ffffff;
+            background-color: rgba(255,255,255,0.1);
+        }
+        .table th {
+            border-bottom-color: #30363d;
+        }
+        .table td, .table th {
+            border-top: 1px solid #30363d;
+        }
+        .badge-fail { background-color: #f85149; color: #fff; }
+        .badge-pass { background-color: #2ea043; color: #fff; }
+        .badge-info { background-color: #1f6feb; color: #fff; }
+        .btn-ai {
+            background-color: #8957e5;
+            color: white;
+            border: none;
+        }
+        .btn-ai:hover {
+            background-color: #9d6cff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/">🛡️ Cloud Sentinel V2</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/">Config Scan</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="/live-instances">Live Status</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/ai-analysis">AI Analysis</a>
+        </li>
+      </ul>
+      <span class="navbar-text me-3">
+        Logged in as: {{ session['username'] }}
+      </span>
+      <a href="/logout" class="btn btn-sm btn-outline-light">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Live OpenStack Resources</h2>
+        <a href="/ai-analysis" class="btn btn-ai">🧠 Run AI Analysis</a>
+    </div>
+
+    <!-- Flashed messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Instances Table -->
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">Compute Instances (Nova)</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>IP Address</th>
+                                    <th>Flavor</th>
+                                    <th>Image ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inst in data.instances %}
+                                <tr>
+                                    <td><strong>{{ inst.name }}</strong></td>
+                                    <td>
+                                        {% if inst.status == 'ACTIVE' %}<span class="badge badge-pass">ACTIVE</span>
+                                        {% else %}<span class="badge bg-secondary">{{ inst.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ inst.ip }}</td>
+                                    <td><code>{{ inst.flavor }}</code></td>
+                                    <td><code>{{ inst.image }}</code></td>
+                                </tr>
+                                {% endfor %}
+                                {% if not data.instances %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No instances found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Groups Table -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Security Groups (Neutron)</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Risks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sg in data.security_groups %}
+                                <tr>
+                                    <td><strong>{{ sg.name }}</strong></td>
+                                    <td>
+                                        {% if sg.status == 'PASS' %}<span class="badge badge-pass">PASS</span>
+                                        {% else %}<span class="badge badge-fail">FAIL</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sg.risks %}
+                                            <ul class="mb-0 text-danger small pl-3">
+                                                {% for risk in sg.risks %}
+                                                <li>{{ risk }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="text-success small">No open port risks</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not data.security_groups %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">No security groups found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Networks Table -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Networks (Neutron)</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Risks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for net in data.networks %}
+                                <tr>
+                                    <td><strong>{{ net.name }}</strong></td>
+                                    <td>
+                                        {% if net.status == 'PASS' %}<span class="badge badge-pass">PASS</span>
+                                        {% else %}<span class="badge badge-fail">FAIL</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if net.risks %}
+                                            <ul class="mb-0 text-danger small pl-3">
+                                                {% for risk in net.risks %}
+                                                <li>{{ risk }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="text-success small">No network risks</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not data.networks %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">No networks found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Volumes Table -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Volumes (Cinder)</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vol in data.volumes %}
+                                <tr>
+                                    <td><strong>{{ vol.name }}</strong><br>
+                                        {% if vol.risks %}
+                                            <div class="text-danger small">{{ vol.risks|join(', ') }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if vol.status == 'PASS' %}<span class="badge badge-pass">PASS</span>
+                                        {% else %}<span class="badge badge-fail">FAIL</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not data.volumes %}
+                                <tr>
+                                    <td colspan="2" class="text-center py-4 text-muted">No volumes found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Table -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Images (Glance)</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for img in data.images %}
+                                <tr>
+                                    <td><strong>{{ img.name }}</strong><br>
+                                        {% if img.risks %}
+                                            <div class="text-danger small">{{ img.risks|join(', ') }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if img.status == 'PASS' %}<span class="badge badge-pass">PASS</span>
+                                        {% else %}<span class="badge badge-fail">FAIL</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not data.images %}
+                                <tr>
+                                    <td colspan="2" class="text-center py-4 text-muted">No images found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Users (Keystone)</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in data.users %}
+                                <tr>
+                                    <td><strong>{{ user.name }}</strong><br>
+                                        {% if user.risks %}
+                                            <div class="text-danger small">{{ user.risks|join(', ') }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.status == 'PASS' %}<span class="badge badge-pass">PASS</span>
+                                        {% else %}<span class="badge badge-fail">FAIL</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not data.users %}
+                                <tr>
+                                    <td colspan="2" class="text-center py-4 text-muted">No users found.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
