@@ -3,34 +3,25 @@ import os
 import glob
 from rules import RULES
 
-
 def _find_config(pattern):
-    """Auto-detect config path using glob (handles any snap version)."""
+    """Auto-detect config path using glob."""
     paths = glob.glob(pattern)
     return paths[0] if paths else None
 
-
-# Auto-detect real MicroStack config paths — works for any snap revision
+# Auto-detect real MicroStack config paths
 CONFIG_FILES = {
-    "Nova":    _find_config("/snap/microstack/*/etc/nova/nova.conf"),
-    "Cinder":  _find_config("/snap/microstack/*/etc/cinder/cinder.conf"),
+    "Nova": _find_config("/snap/microstack/*/etc/nova/nova.conf"),
+    "Cinder": _find_config("/snap/microstack/*/etc/cinder/cinder.conf"),
     "Neutron": _find_config("/snap/microstack/*/etc/neutron/neutron.conf"),
-    "Swift":   None,  # Not available in MicroStack
+    "Keystone": _find_config("/snap/microstack/*/etc/keystone/keystone.conf"),
+    "Glance": _find_config("/snap/microstack/*/etc/glance/glance-api.conf")
 }
 
 print("\n=== Cloud Sentinel — Config Path Detection ===")
 for svc, path in CONFIG_FILES.items():
-    status = path if path else "Not found — will use mock config"
+    status = path if path else "Not found"
     print(f"  {svc:10s}: {status}")
 print("=============================================\n")
-
-MOCK_CONFIG_FILES = {
-    "Nova": "mock_configs/nova.conf",
-    "Cinder": "mock_configs/cinder.conf",
-    "Neutron": "mock_configs/neutron.conf",
-    "Swift": "mock_configs/swift.conf"
-}
-
 
 def parse_config(filepath):
     config = configparser.ConfigParser()
@@ -47,12 +38,7 @@ def run_scan():
     for rule in RULES:
         service = rule["service"]
         filepath = CONFIG_FILES.get(service)
-        
-        # Fallback to mock configs if primary doesn't exist
-        if filepath is None or not os.path.exists(filepath):
-            filepath = MOCK_CONFIG_FILES.get(service)
 
-        # Handle missing config file
         if filepath is None or not os.path.exists(filepath):
             results.append({
                 "id": rule["id"],
@@ -66,7 +52,6 @@ def run_scan():
             })
             continue
 
-
         config = parse_config(filepath)
 
         if config is None:
@@ -76,6 +61,7 @@ def run_scan():
             section = rule["section"]
             parameter = rule["parameter"]
             try:
+                # configparser can handle fallback mechanisms, but basic get is enough
                 actual = config.get(section, parameter)
             except (configparser.NoSectionError, configparser.NoOptionError):
                 actual = "NOT SET"

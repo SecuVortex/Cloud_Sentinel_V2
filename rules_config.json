@@ -1,0 +1,191 @@
+[
+    {
+        "id": "NOVA-001",
+        "service": "Nova",
+        "section": "DEFAULT",
+        "parameter": "allow_resize_to_same_host",
+        "expected": "false",
+        "severity": "Medium",
+        "remediation": "Set allow_resize_to_same_host=false to prevent resource abuse."
+    },
+    {
+        "id": "NOVA-002",
+        "service": "Nova",
+        "section": "DEFAULT",
+        "parameter": "use_neutron",
+        "expected": "true",
+        "severity": "High",
+        "remediation": "Enable Neutron networking for better network isolation."
+    },
+    {
+        "id": "NOVA-003",
+        "service": "Nova",
+        "section": "DEFAULT",
+        "parameter": "force_config_drive",
+        "expected": "true",
+        "severity": "Low",
+        "remediation": "Enable config drive for better instance configuration security."
+    },
+    {
+        "id": "NOVA-004",
+        "service": "Nova",
+        "section": "api",
+        "parameter": "auth_strategy",
+        "expected": "keystone",
+        "severity": "High",
+        "remediation": "Ensure Nova uses Keystone for authentication."
+    },
+    {
+        "id": "NOVA-005",
+        "service": "Nova",
+        "section": "vnc",
+        "parameter": "vncserver_listen",
+        "expected": "127.0.0.1",
+        "severity": "High",
+        "remediation": "Bind VNC server to localhost to prevent unauthorized access."
+    },
+    {
+        "id": "NEUTRON-001",
+        "service": "Neutron",
+        "section": "DEFAULT",
+        "parameter": "auth_strategy",
+        "expected": "keystone",
+        "severity": "High",
+        "remediation": "Set auth_strategy=keystone to enforce authentication."
+    },
+    {
+        "id": "NEUTRON-002",
+        "service": "Neutron",
+        "section": "DEFAULT",
+        "parameter": "allow_overlapping_ips",
+        "expected": "true",
+        "severity": "Medium",
+        "remediation": "Enable overlapping IPs for better network isolation."
+    },
+    {
+        "id": "NEUTRON-003",
+        "service": "Neutron",
+        "section": "agent",
+        "parameter": "prevent_arp_spoofing",
+        "expected": "true",
+        "severity": "High",
+        "remediation": "Enable ARP spoofing prevention in Neutron."
+    },
+    {
+        "id": "NEUTRON-004",
+        "service": "Neutron",
+        "section": "securitygroup",
+        "parameter": "enable_security_group",
+        "expected": "true",
+        "severity": "High",
+        "remediation": "Enable security groups to restrict traffic."
+    },
+    {
+        "id": "CINDER-001",
+        "service": "Cinder",
+        "section": "DEFAULT",
+        "parameter": "enable_v3_api",
+        "expected": "true",
+        "severity": "Medium",
+        "remediation": "Enable Cinder v3 API for improved security features."
+    },
+    {
+        "id": "CINDER-002",
+        "service": "Cinder",
+        "section": "DEFAULT",
+        "parameter": "auth_strategy",
+        "expected": "keystone",
+        "severity": "High",
+        "remediation": "Ensure Cinder uses Keystone for authentication."
+    },
+    {
+        "id": "CINDER-003",
+        "service": "Cinder",
+        "section": "DEFAULT",
+        "parameter": "nas_secure_file_permissions",
+        "expected": "auto",
+        "severity": "High",
+        "remediation": "Ensure secure file permissions for NAS volumes."
+    },
+    {
+        "id": "CINDER-004",
+        "service": "Cinder",
+        "section": "DEFAULT",
+        "parameter": "nas_secure_file_operations",
+        "expected": "auto",
+        "severity": "High",
+        "remediation": "Ensure secure file operations for NAS volumes."
+    },
+    {
+        "id": "KEYSTONE-001",
+        "service": "Keystone",
+        "section": "token",
+        "parameter": "expiration",
+        "expected": "3600",
+        "severity": "High",
+        "remediation": "Limit token expiration to 1 hour (3600 seconds)."
+    },
+    {
+        "id": "KEYSTONE-002",
+        "service": "Keystone",
+        "section": "security_compliance",
+        "parameter": "lockout_failure_attempts",
+        "expected": "5",
+        "severity": "High",
+        "remediation": "Lock account after 5 failed login attempts to prevent brute-force."
+    },
+    {
+        "id": "KEYSTONE-003",
+        "service": "Keystone",
+        "section": "security_compliance",
+        "parameter": "lockout_duration",
+        "expected": "1800",
+        "severity": "Medium",
+        "remediation": "Lock accounts for 30 minutes (1800 seconds) after failed attempts."
+    },
+    {
+        "id": "KEYSTONE-004",
+        "service": "Keystone",
+        "section": "security_compliance",
+        "parameter": "password_expires_days",
+        "expected": "90",
+        "severity": "Medium",
+        "remediation": "Force password change every 90 days."
+    },
+    {
+        "id": "KEYSTONE-005",
+        "service": "Keystone",
+        "section": "security_compliance",
+        "parameter": "unique_last_password_count",
+        "expected": "5",
+        "severity": "Medium",
+        "remediation": "Prevent reusing the last 5 passwords."
+    },
+    {
+        "id": "GLANCE-001",
+        "service": "Glance",
+        "section": "DEFAULT",
+        "parameter": "public_endpoint",
+        "expected": "https",
+        "severity": "High",
+        "remediation": "Ensure Glance API uses HTTPS."
+    },
+    {
+        "id": "GLANCE-002",
+        "service": "Glance",
+        "section": "DEFAULT",
+        "parameter": "show_image_direct_url",
+        "expected": "false",
+        "severity": "High",
+        "remediation": "Hide direct URLs to images to prevent unauthorized access."
+    },
+    {
+        "id": "GLANCE-003",
+        "service": "Glance",
+        "section": "DEFAULT",
+        "parameter": "show_multiple_locations",
+        "expected": "false",
+        "severity": "Medium",
+        "remediation": "Do not show multiple locations for an image to mitigate exposure."
+    }
+]
